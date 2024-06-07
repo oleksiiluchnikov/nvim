@@ -1,4 +1,3 @@
--- Functions to manage knowledge of the world
 local M = {}
 
 M.inline_fields_order = {
@@ -113,16 +112,17 @@ function M.toggle_checkbox()
     if not M.has_inline_field(new_line, "date_updated") then
         new_line = M.add_inline_field(new_line, "date_updated", os.date(date_format))
     else
-        new_line = M.replace_inline_field_value(new_line, "date_updated", os.date(date_format))
+        new_line = M.replace_inline_field_value(new_line, "date_updated", os.date(date_ormat))
     end
 
     -- if the next checkbox state is "x"
     -- add date_completed field
     if next_checkbox_state == "x" then
         if not M.has_inline_field(new_line, "date_completed") then
-            new_line = M.add_inline_field(new_line, "date_completed", os.date(date_format))
+            new_line = M.add_inline_field(new_line, "date_completed", os.date(date_ormat))
         else
-            new_line = M.replace_inline_field_value(new_line, "date_completed", os.date(date_format))
+            new_line =
+                M.replace_inline_field_value(new_line, "date_completed", os.date(date_format))
         end
     end
 
@@ -142,7 +142,8 @@ function M.toggle_checkbox()
         if not M.has_inline_field(new_line, "date_cancelled") then
             new_line = M.add_inline_field(new_line, "date_cancelled", os.date(date_format))
         else
-            new_line = M.replace_inline_field_value(new_line, "date_cancelled", os.date(date_format))
+            new_line =
+                M.replace_inline_field_value(new_line, "date_cancelled", os.date(date_format))
         end
     end
 
@@ -221,13 +222,13 @@ function M.set_multi_checkbox_state(target, state)
     -- if target not assigned, set to current line
     if target == nil then
         target = vim.api.nvim_get_current_line()
-        -- if target is a number, set to line number
+    -- if target is a number, set to line number
     elseif type(target) == "number" then
         target = vim.api.nvim_buf_get_lines(0, target - 1, target, false)[1]
-        -- if target is a multiline string, apply to each line
+    -- if target is a multiline string, apply to each line
     elseif string.find(target, "\n") then
         target = vim.split(target, "\n")
-    elseif string.match(target, '^%s*$') then
+    elseif string.match(target, "^%s*$") then
         target = { target }
     end
     if type(target) ~= "table" then

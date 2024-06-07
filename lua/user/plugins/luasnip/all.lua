@@ -1,12 +1,5 @@
-local ls = require 'luasnip'
-
-ls.snippets = {
-    all = {
-        ls.parser.parse_snippet(
-            'all',
-            [[
-            Hello, ${1:world}!
-            ]]
-        ),
-    },
+local s = require("luasnip").s
+local t = require("luasnip").t
+return {
+	s("trig", t("loaded!!"))
 }

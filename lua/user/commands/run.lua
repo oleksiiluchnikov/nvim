@@ -9,7 +9,6 @@ package.loaded.tauri = {}
 
 --- Get the Tauri project root directory.
 --- Stores the Tauri project root in the global variable package.loaded.tauri.root.
---- @return string|nil Returns the Tauri project root directory.
 local function get_tauri_root()
     local dir = vim.fn.expand('%:p:h')
     local path = Path:new(dir)
@@ -30,8 +29,6 @@ local function get_tauri_root()
 end
 
 --- Check if the current directory is a Tauri project.
----
---- @return boolean Returns true if it's a Tauri project, otherwise false.
 local function is_tauri_project()
     -- Call get_tauri_root() to ensure the global variable package.loaded.tauri.root is set.
     get_tauri_root()
@@ -43,21 +40,18 @@ local function is_tauri_project()
 end
 
 --- Change the current directory to the Tauri project root.
---- @return nil
 local function cd_to_tauri_root()
     -- cd to the Tauri project root
     vim.cmd('cd ' .. get_tauri_root())
 end
 
 --- Change the current directory to the Tauri project frontend directory.
---- @return nil
 local function cd_to_tauri_frontend()
     -- cd to the Tauri project frontend directory
     vim.cmd('cd ' .. get_tauri_root() .. '/src')
 end
 
 --- Change the current directory to the Tauri project backend directory.
---- @return nil
 local function cd_to_tauri_backend()
     -- cd to the Tauri project backend directory
     vim.cmd('cd ' .. get_tauri_root() .. '/src-tauri/src')

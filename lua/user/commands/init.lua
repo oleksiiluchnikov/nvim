@@ -1,141 +1,89 @@
-require("user.commands.hammerspoon")
-require("user.commands.run")
-local configs = require("user.commands.configs")
+require("user.commands.configs")
+require("user.commands.markdown")
 
--- Commands
-local build_commands = {
-    c = "g++ -std=c++17 -o %:p:r.o %",
-    cpp = "g++ -std=c++17 -o %:p:r.o %",
-    rust = "cargo build --release",
-    go = "go build -o %:p:r.o %",
-}
+---Reorders lines in a buffer to move dataview query lines after frontmatter.
+---@param bufnr number Buffer handle
+---@return nil
+local function replace_dataview_query(bufnr)
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    local matched_lines = {} ---@type string[]
+    local non_matched_lines = {} ---@type string[]
+    local has_frontmatter = lines[1] == "---"
+    local start_line = has_frontmatter and 1 or 0
 
-local qmk_build_command = "qmk compile -kb idobao/id75/v2 -km oleksiiluchnikov"
+    for _, line in ipairs(lines) do
+        if line:match("^[a-z_-]+::.*$") then
+            table.insert(matched_lines, line)
+        else
+            table.insert(non_matched_lines, line)
+        end
+    end
 
-local debug_build_commands = {
-    c = "g++ -std=c++17 -g -o %:p:r.o %",
-    cpp = "g++ -std=c++17 -g -o %:p:r.o %",
-    rust = "cargo build",
-    go = "go build -o %:p:r.o %"
-}
+    if has_frontmatter then
+        table.remove(matched_lines, 1)
+        for i, line in ipairs(matched_lines) do
+            table.insert(non_matched_lines, start_line + i, line)
+        end
+        matched_lines = non_matched_lines
+    else
+        for _, line in ipairs(non_matched_lines) do
+            table.insert(matched_lines, line)
+        end
+    end
 
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, matched_lines)
 
-local run_commands = {
-    c = "%:p:r.o",
-    cpp = "%:p:r.o",
-    rust = "cargo run --release",
-    go = "%:p:r.o",
-    py = "python3 %",
-    sh = "zsh %",
-    js = "node %",
-    applescript = "osascript \"%\"",
-}
-
-
-local function execute_osascript(script)
-    local command = string.format('osascript -e \'%s\'', script)
-    vim.cmd(string.format('!%s', command))
+    return nil
 end
 
+vim.api.nvim_create_user_command("RDvQuery", replace_dataview_query, {})
 
--- Assign commands
-
--- "Build" to build current file
-vim.api.nvim_create_user_command("Build", function()
-    local filetype = vim.bo.filetype
-    for file, command in pairs(build_commands) do
-        -- if parent dir of current file contains "qmk_firmware" then use qmk build command
-        if string.find(vim.fn.expand("%:p:h"), "qmk_firmware") then
-            vim.cmd("!" .. qmk_build_command)
-            break
-        end
-        if (filetype == file) then
-            vim.cmd("!" .. command)
-            break
-        end
-    end
+vim.api.nvim_create_user_command("Chat", function()
+    require("user.plugins.shellbot").chatgpt()
 end, {})
 
+--- Executes Lua code passed as an argument and prints the result.
+---@param lua_code string Lua code to execute
+---@return nil
+vim.api.nvim_create_user_command("P", function(args)
+    -- :execute 'lua require("lazy.core.loader").reload("vault.nvim")' | echo "ok"
+    require("lazy.core.loader").reload("vault.nvim")
 
--- "DebugBuild" to build current file with debug symbols
-vim.api.nvim_create_user_command("DebugBuild", function()
-    local filetype = vim.bo.filetype
-    for file, command in pairs(debug_build_commands) do
-        if (filetype == file) then
-            vim.cmd("!" .. command)
-            break
-        end
-    end
-end, {})
+    ---@type string
+    local lua_code = args.fargs[1]
 
--- "Run" to run current file
-vim.api.nvim_create_user_command("Run", function()
-    local filetype = vim.bo.filetype
-    for file, command in pairs(run_commands) do
-        if (filetype == file) then
-            command = string.gsub(command, "%%", vim.fn.expand("%")) -- replace % with current file path
-            vim.notify(vim.fn.system(command))
-            break
-        end
-    end
-end, {})
+    -- vim.api.nvim_command("lua print(vim.inspect(" .. lua_code .. "))")
+    lua_code = string.format("lua print(vim.inspect(%s))", lua_code)
 
--- "Run" to run jsx script in photoshop
-vim.api.nvim_create_user_command("RunPhotoshop", function()
-    -- local cmd = "!osascript -e 'tell application \"Adobe Photoshop 2023\"  to do javascript of file \"%s\"'"
-    -- local script = vim.fn.readfile(vim.fn.expand("%:p"))
-    -- script = table.concat(script, "\\n")
-    -- script = string.gsub(script, "'", "\\'")
-    -- -- Escape for double quotes
-    -- script = string.gsub(script, '"', '\\"')
-    -- cmd = string.format(cmd, script)
-    -- -- Run command silent
-    -- vim.cmd(cmd)
-    local cmd =
-    "silent exec '!osascript -e \"tell application \\\"Adobe Photoshop 2023\\\"  to do javascript of file \\\"%s\\\"\"'"
-    cmd = string.format(cmd, vim.fn.expand("%:p"))
-    vim.cmd(cmd)
-end, {})
+    ---@type string
+    vim.cmd(lua_code)
 
--- "RunPhotoshopScript" to run current file in Photoshop
-vim.api.nvim_create_user_command("RunPsScript", function()
-    local photoshop_name = vim.fn.system("hs -c 'apps.photoshop.name'")
-    -- execute_osascript('\'tell application ' .. photoshop_name .. 'to do javascript of file "%"\'')
-    vim.fn.system("osascript -e 'tell application " .. photoshop_name .. " to do javascript of file \"%\"'")
+    ---@type number
+    local bufnr = vim.api.nvim_get_current_buf()
+
+    vim.api.nvim_set_option_value("syntax", "lua", {
+        -- win = vim.api.nvim_get_current_win(),
+        buf = bufnr,
+    })
+
+    vim.api.nvim_set_option_value("relativenumber", true, {
+        win = vim.api.nvim_get_current_win(),
+        -- buf = bufnr,
+    })
 end, {
-    nargs = 1,
-    complete = function()
-        local app_scripts_dir = vim.fn.system("hs -c 'apps.photoshop.paths.scripts'")
-        -- Reursively find all files in app_scripts_dir
-        -- mdfind -onlyin app_scripts_dir "kMDItemFSName == '*.*' && kMDItemKind != 'Folder'"
-        local paths = vim.fn.system("find " .. app_scripts_dir)
-        -- Split files by newlines
-        local paths_table = vim.split(paths, "\n")
-        -- Remove directories
-        local files = {}
-        for _, path in pairs(paths_table) do
-            if vim.fn.isdirectory(path) == 0 then
-                -- Remove app_scripts_dir from start of path
-                local file = string.sub(path, string.len(app_scripts_dir) + 1)
-                if file ~= "" then
-                    -- Remove app_scripts_dir from path
-                    table.insert(files, file)
-                end
-            end
-        end
-        return files
-    end
+    nargs = "?",
+    -- complete = "customlist,v:lua.lazy.plugins.vault.nvim.list",
+    -- complete = function(arg_lead, cmd_line, cursor_pos)
+    --   -- We need to find same completions like
+    --   -- we get when use `complete=command` but
+    --   -- if it passed `lua` as first argument.
+    -- end,
+    complete = "lua",
 })
 
--- "GenerateUUID" to generate UUID and put in to register
-vim.api.nvim_create_user_command("GenerateUUID", function()
-    local uuid = vim.fn.system('uuidgen | tr -dc "[:alnum:]" | tr "[:upper:]" "[:lower:]" | tr -d "\\0"')
-    vim.api.nvim_put({ uuid }, 'c', true, true)
-end, {})
-
--- "BuildAndRun" to build and run current file
-vim.api.nvim_create_user_command("BuildAndRun", function()
-    vim.cmd [[Build]]
-    vim.cmd [[Run]]
+vim.api.nvim_create_user_command("YabaiCenter", function()
+    -- do it silently without any notification
+    -- vim.cmd("!yabai -m window --grid 3:4:1:1:2:2")
+    vim.fn.system("yabai -m window --grid 3:4:1:1:2:2")
 end, {})
 

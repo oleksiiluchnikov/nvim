@@ -1,6 +1,7 @@
 -- Neovid config file
 -- Font
-vim.opt.guifont = { "Fairfax HD:h16" }
+-- vim.opt.guifont = { "Fairfax HD:h16" }
+vim.opt.guifont = { "ProggyCleanTTSZ:h16" }
 
 -- Scale
 vim.g.neovide_scale_factor = 1

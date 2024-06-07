@@ -3,12 +3,15 @@ if not status_ok then
     return
 end
 
+local wtf = require('wtf')
+
 require('lualine').setup {
     options = {
-        icons_enabled = true,
-        theme = 'auto',
-        component_separators = { left = '', right = '' },
-        section_separators = { left = '', right = '' },
+        icons_enabled = false,
+        theme = 'catppuccin',
+        component_separators = { left = '', right = '' },
+        -- I want diagonal separators like: "" and "" or "" and "" or "" and "" or "" and ""
+        section_separators = { left = '', right = '' },
         disabled_filetypes = {
             statusline = {},
             winbar = {},
@@ -23,19 +26,21 @@ require('lualine').setup {
         }
     },
     sections = {
-        lualine_a = { 'mode' },
-        lualine_b = { 'branch', 'diff', 'diagnostics' },
+      -- add cwd to lualine
+        lualine_a = { 'mode'},
+        -- lualine_b = { function() return vim.fn.getcwd() end, 'branch', 'diff', 'diagnostics' },
+        -- lualine_b = { function() return vim.fn.getcwd():gsub(os.getenv('HOME'), '~') end, 'branch', 'diff', 'diagnostics' },
         lualine_c = {{ 'filename', path = 4 }},
-        lualine_x = { 'encoding', 'fileformat', 'filetype' },
-        lualine_y = { 'progress' },
+        lualine_x = { 'filetype' },
+        lualine_y = { },
         lualine_z = { 'location' }
     },
     inactive_sections = {
         lualine_a = {},
         lualine_b = {},
         lualine_c = {{ 'filename', path = 1 }},
-        lualine_x = { 'location' },
-        lualine_y = {},
+        lualine_x = {wtf.get_status() },
+        lualine_y = {"location"},
         lualine_z = {}
     },
     tabline = {},

@@ -1,163 +1,307 @@
---
--- Complitions settings (nvim-cmp)
---
--- @module user.configs.cmp
+local cmp = require("cmp")
+-- local border = require("user.styles").borders.solid
 
-------------------------------------------------------------------------------
-local cmp = require('cmp')
-------------------------------------------------------------------------------
-local style_border = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" }
+---@class cmp.ConfigSchema
+local opts = {}
 
-------------------------------------------------------------------------------
-cmp.setup({
-    snippet = {
-        expand = function(args)
-            require('luasnip').lsp_expand(args.body)
-        end,
-    },
-    style = {
-        winhighlight = "NormalFloat:NormalFloat,FloatBorder:FloatBorder",
-        scrollbar = "║",
-        border = style_border,
-    },
-    formatting = {
-        fields = { "abbr", "menu" , "kind" },
-        format = function(entry, vim_item)
-            vim_item.menu_hl_group = "CmpItemKind" .. vim_item.kind
-            vim_item.menu = vim_item.kind
-            vim_item.abbr = vim_item.abbr:sub(1, 50) -- truncate long items to 50 chars
-            return vim_item
-        end
-    },
-    window = {
-        completion = {
-            border = style_border,
-            scrollbar = "║",
-            winhighlight = 'Normal:CmpMenu,FloatBorder:CmpMenuBorder,CursorLine:CmpSelection,Search:None',
-            autocomplete = {
-                require("cmp.types").cmp.TriggerEvent.InsertEnter,
-                require("cmp.types").cmp.TriggerEvent.TextChanged,
-            },
-        },
-        documentation = {
-            border = style_border,
-            winhighlight = "NormalFloat:NormalFloat,FloatBorder:FloatBorder",
-            scrollbar = "║",
-        },
-    },
-    -- show first matching item as ghost text
-    ghost_text = {
-        enabled = false,
-        prefix = " ",
-        suffix = " ",
-    },
-    experimental = {
-        native_menu = false,
-        ghost_text = false,
-    },
-    sources = {
-        { name = "path",     group_index = 2 },
-        { name = "nvim_lsp", group_index = 2, keyword_length = 2 },
-        { name = 'nvim_lsp_signature_help'},
-        { name = 'nvim_lua', keyword_length = 2 },
-        { name = 'buffer', keyword_length = 2 },
-        { name = 'luasnip', keyword_length = 2 },
-        { name = 'neorg',    group_index = 2 },
-    },
-    sorting = {
-        --keep priority weight at 2 for much closer matches to appear above copilot
-        --set to 1 to make copilot always appear on top
-        priority_weight = 1,
-        comparators = {
-            -- order matters here
-            cmp.config.compare.exact,
-            cmp.config.compare.offset,
-            cmp.config.compare.score,
-            cmp.config.compare.recently_used,
-            cmp.config.compare.locality,
-            cmp.config.compare.kind,
-            cmp.config.compare.sort_text,
-            cmp.config.compare.length,
-            cmp.config.compare.order,
-        },
-    },
-    preselect = cmp.PreselectMode.Item,
-})
-
---set max height of items
-vim.cmd([[ set pumheight=10 ]])
-
-------------------------------------------------------------------------------
-
---set highlights
-local highlights = {
-    -- type highlights
-    CmpItemKindText = { fg = "LightGrey" },
-    CmpItemKindFunction = { fg = "#C586C0" },
-    CmpItemKindClass = { fg = "Orange" },
-    CmpItemKindKeyword = { fg = "#f90c71" },
-    CmpItemKindSnippet = { fg = "#565c64" },
-    CmpItemKindConstructor = { fg = "#ae43f0" },
-    CmpItemKindVariable = { fg = "#9CDCFE", bg = "NONE" },
-    CmpItemKindInterface = { fg = "#f90c71", bg = "NONE" },
-    CmpItemKindFolder = { fg = "#2986cc" },
-    CmpItemKindReference = { fg = "#922b21" },
-    CmpItemKindMethod = { fg = "#C586C0" },
-    CmpItemKindCopilot = { fg = "#6CC644" },
-    -- CmpItemMenu = { fg = "#C586C0", bg = "#C586C0" },
-    CmpItemAbbr = { fg = "#565c64", bg = "NONE" },
-    CmpItemAbbrMatch = { fg = "#569CD6", bg = "NONE" },
-    CmpItemAbbrMatchFuzzy = { fg = "#569CD6", bg = "NONE" },
-    CmpMenuBorder = { fg = "#263341" },
-    CmpMenu = { bg = "#10171f" },
-    CmpSelection = { bg = "#263341" },
+opts.snippet = {
+    expand = function(args)
+        require("luasnip").lsp_expand(args.body)
+    end,
 }
 
--- set highlights for all groups in highlights table above
-for group, hl in pairs(highlights) do
-    vim.api.nvim_set_hl(0, group, hl)
-end
+opts.style = {
+    scrollbar = "║",
+    border = border,
+}
+
+opts.formatting = {
+    expandable_indicator = false,
+    fields = { "abbr", "kind", "menu" },
+    format = function(entry, item)
+        item.menu_hl_group = "CmpItemKind" .. item.kind
+        local menu_icon = {
+            cody = "[Cody]",
+            nvim_lsp = "[LSP]",
+            nvim_lua = "[Lua]",
+            buffer = "[Buf]",
+            luasnip = "[Snip]",
+            path = "[Path]",
+            neorg = "[Neorg]",
+            vault_tag = "[Tag]",
+            vault_date = "[Date]",
+        }
+        item.menu = menu_icon[entry.source.name]
+        if item.kind == "Text" then
+            item.kind = ""
+        end
+        return item
+    end,
+}
+opts.window = {
+    completion = {
+        border = { "", "", "", "│", "╯", "─", "╰", "│" },
+        zindex = 50,
+        col_offset = 0,
+        side_padding = 0,
+        scrollbar = true,
+        winhighlight = "Normal:CmpMenu,FloatBorder:CmpMenuBorder,CursorLine:CmpSelection,Search:None",
+        autocomplete = {
+            require("cmp.types").cmp.TriggerEvent.InsertEnter,
+            require("cmp.types").cmp.TriggerEvent.TextChanged,
+        },
+    },
+    documentation = cmp.config.window.bordered({
+        winhighlight = "Normal:CmpMenu,FloatBorder:CmpMenuBorder,CursorLine:CmpSelection,Search:None",
+    }),
+}
+opts.ghost_text = {
+    enabled = false,
+}
+opts.experimental = {
+    ghost_text = false,
+}
+opts.view = {
+    entries = { name = "custom", selection_order = "near_cursor" },
+    docs = {
+        auto_open = true,
+    },
+}
+opts.sources = {
+    { name = "path" },
+    { name = "cody" },
+    { name = "nvim_lsp" },
+    { name = "nvim_lsp_signature_help" },
+    { name = "nvim_lua" },
+    { name = "luasnip" },
+    { name = "buffer" },
+    { name = "neorg" },
+    { name = "vault_tag" },
+    { name = "vault_date" },
+}
+opts.sorting = {
+    priority_weight = 2,
+    comparators = {
+        -- order matters here
+        cmp.config.compare.exact,
+        cmp.config.compare.offset,
+        cmp.config.compare.score,
+        cmp.config.compare.recently_used,
+        cmp.config.compare.locality,
+        cmp.config.compare.kind,
+        cmp.config.compare.sort_text,
+        cmp.config.compare.length,
+        cmp.config.compare.order,
+    },
+}
+opts.preselect = cmp.PreselectMode.Item
+
+cmp.setup(opts)
+cmp.setup.filetype({ "TelescopePrompt" }, opts)
+
+--set max height of items
+vim.cmd([[ set pumheight=20 ]])
+vim.api.nvim_set_hl(0, "CmpItemKindCody", { fg = "Red" })
 
 ------------------------------------------------------------------------------
 
 -- `:` cmdline setup.
-cmp.setup.cmdline(':', {
+cmp.setup.cmdline(":", {
     mapping = cmp.mapping.preset.cmdline(),
     sources = cmp.config.sources({
-        { name = 'path' }
+        { name = "path" },
     }, {
         {
-            name = 'cmdline',
+            name = "cmdline",
             option = {
-                ignore_cmds = { 'Man', '!' }
-            }
-        }
-    })
+                ignore_cmds = { "Man", "!" },
+            },
+        },
+    }),
 })
 -- `/` cmdline setup.
-cmp.setup.cmdline('/', {
+cmp.setup.cmdline("/", {
     mapping = cmp.mapping.preset.cmdline(),
     sources = {
-        { name = 'buffer' }
-    }
+        { name = "buffer" },
+    },
 })
-cmp.setup.cmdline('?', {
+cmp.setup.cmdline("?", {
     mapping = cmp.mapping.preset.cmdline(),
     sources = {
-        { name = 'buffer' }
-    }
+        { name = "buffer" },
+    },
 })
-cmp.setup.cmdline('/', {
+cmp.setup.cmdline("/", {
     mapping = cmp.mapping.preset.cmdline(),
     sources = {
-        { name = 'buffer' }
-    }
+        { name = "buffer" },
+    },
 })
-cmp.setup.cmdline('!', {
+cmp.setup.cmdline("!", {
     mapping = cmp.mapping.preset.cmdline(),
     sources = {
-        { name = 'buffer' }
-    }
+        { name = "buffer" },
+    },
+})
+local copilot_suggestion = require("copilot.suggestion")
+
+-- local luasnip = require('luasnip')
+vim.keymap.set("i", "<C-y>", function(fallback)
+    if copilot_suggestion.is_visible() then
+        copilot_suggestion.accept_word()
+    elseif cmp.visible() then
+        cmp.mapping.confirm({
+            behavior = cmp.ConfirmBehavior.Replace,
+            select = select,
+        })()
+        -- elseif luasnip.expandable() then
+        --   luasnip.expand()
+    else
+        fallback()
+    end
+end, {
+    silent = true,
+    desc = "confirm completion with C-y(es)",
 })
 
-cmp.setup()
+-- Accept line
+vim.keymap.set("i", "<C-c>", function()
+    if copilot_suggestion.is_visible() then
+        copilot_suggestion.accept_line()
+    end
+end, {
+    silent = true,
+    desc = "copilot: accept line",
+})
+
+-- Accept whole copilot suggestion
+vim.keymap.set("i", "<C-j>", function()
+    local copilot = copilot_suggestion
+    if copilot.is_visible() then
+        copilot.accept()
+    end
+end, {
+    silent = true,
+    desc = "copilot: accept whole suggestion",
+})
+
+-- Confirm Complition with C-y(es) in command mode
+vim.keymap.set("c", "<C-y>", function()
+    if cmp.visible() then
+        cmp.mapping.confirm({
+            behavior = cmp.ConfirmBehavior.Replace,
+            select = select,
+        })()
+    end
+end, {
+    silent = true,
+    desc = "confirm completion with C-y(es)",
+})
+
+vim.keymap.set("!", "<C-y>", function()
+    if cmp.visible() then
+        cmp.mapping.confirm({
+            behavior = cmp.ConfirmBehavior.Replace,
+            select = select,
+        })()
+    end
+end, {
+    silent = true,
+    desc = "confirm completion with C-y(es)",
+})
+
+-- Select Next Item with C-n(ext)
+vim.keymap.set("i", "<C-n>", function(fallback)
+    if copilot_suggestion.is_visible() then
+        copilot_suggestion.next()
+    elseif cmp.visible() then
+        cmp.select_next_item()
+        -- elseif luasnip.expandable() then
+        --   luasnip.jump(1)
+    else
+        fallback()
+    end
+end, {
+    silent = true,
+    desc = "select next item with C-n(ext)",
+})
+
+vim.keymap.set("c", "<C-n>", function(fallback)
+    if cmp.visible() then
+        cmp.select_next_item()
+        -- elseif luasnip.expandable() then
+        --   luasnip.jump(1)
+    else
+        fallback()
+    end
+end, {
+    silent = true,
+    desc = "select next item with C-n(ext)",
+})
+
+vim.keymap.set("!", "<C-n>", function(fallback)
+    if cmp.visible() then
+        cmp.select_next_item()
+        -- elseif luasnip.expandable() then
+        --   luasnip.jump(1)
+    else
+        fallback()
+    end
+end, {
+    silent = true,
+    desc = "select next item with C-n(ext)",
+})
+
+-- Select Previous Item with C-p(revious)
+vim.keymap.set("i", "<C-p>", function(fallback)
+    if copilot_suggestion.is_visible() then
+        copilot_suggestion.prev()
+    elseif cmp.visible() then
+        cmp.select_prev_item()
+        -- elseif luasnip.jumpable(-1) then
+        --   luasnip.jump(-1)
+    else
+        fallback()
+    end
+end, {
+    silent = true,
+    desc = "select previous item with C-p(revious)",
+})
+
+vim.keymap.set("!", "<C-p>", function(fallback)
+    if cmp.visible() then
+        cmp.select_prev_item()
+        -- elseif luasnip.expandable() then
+        --   luasnip.jump(-1)
+    else
+        fallback()
+    end
+end, {
+    silent = true,
+    desc = "select next item with C-n(ext)",
+})
+
+-- Scroll documentation / diagnostic preview C-u(p)
+vim.keymap.set("i", "<C-u>", function(fallback)
+    if cmp.visible() then
+        cmp.scroll_docs(-4)
+    else
+        fallback()
+    end
+end, {
+    silent = true,
+    desc = "scroll documentation / diagnostic preview up in insert mode",
+})
+
+-- Scroll documentation / diagnostic preview C-d(own)
+vim.keymap.set("i", "<C-d>", function(fallback)
+    if cmp.visible() then
+        cmp.scroll_docs(4)
+    else
+        fallback()
+    end
+end, {
+    silent = true,
+    desc = "scroll documentation / diagnostic preview down in insert mode",
+})

@@ -1,58 +1,40 @@
------------------------------------
-local has_functions, functions = pcall(require, 'user.functions')
-if not has_functions then
-    vim.notify("user.functions not found")
-    return
-end
+vim.g.mapleader = " "
 
-    local get_root_dir = function()
-        local dir = vim.fn.expand('%:p:h')
-        local git_dir = vim.fn.finddir('.git', dir .. ';')
-        return git_dir and git_dir:match("(.*/)") or dir
-    end
--- <leader> then [f]
-------------------------------------------------------------------------------
-vim.g.mapleader = " " -- set leader key to space
-
-------------------------------------------------------------------------------
+local description = "Test"
+vim.keymap.set("n", "<C-M-S-D-o>", ":lua vim.notify('hello')<CR>", { desc = description })
+description = "Toggle Terminal"
+vim.keymap.set("n", "<C-t>", function()
+    require("user.functions").toggle_terminal()
+end, { desc = description })
+description = "run code"
+vim.keymap.set("n", "<D-x>", "<cmd>Run<CR>", { desc = description })
+vim.keymap.set("n", "<M-x>", function() end, { desc = "toggle checkbox" })
+-- vim.keymap.set("n", "<leader>eC", ":Config nvim<CR>", { desc = "edit nvim config", noremap = true })
+vim.keymap.set("n", "<leader>i", function()
+    vim.cmd([[!hs -c 'print(apps.photoshop.alias)']])
+end, { noremap = false })
+vim.keymap.set({ "n", "v" }, "<up>", function()
+    require("user.utils").jump_to_next_line_with_same_indent(false, { "end", "-" })
+end, { desc = "move to previous line with same indentation" })
+vim.keymap.set({ "n", "v" }, "<down>", function()
+    require("user.utils").jump_to_next_line_with_same_indent(true, { "end", "-" })
+end, { desc = "move to next line with same indentation" })
+vim.keymap.set("n", "<left>", "<C-w>h")
+vim.keymap.set("n", "<right>", "<C-w>l")
+vim.keymap.set(
+    "t",
+    "<C-t>",
+    "<C-\\><C-n>:lua require('user.functions').toggle_terminal()<CR>",
+    { desc = "toggle terminal" }
+)
 vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv", { desc = "move line up" })
 vim.keymap.set("v", "K", ":m '>-2<CR>gv=gv", { desc = "move line down" })
+vim.keymap.set("v", "p", "\"_dP", { desc = "paste from clipboard" })
 
-------------------------------------------------------------------------------
-vim.keymap.set('n', '<leader>pv', vim.cmd.Ex, { desc = "back to netrw" })
+vim.keymap.set("v", "<leader>mp", function() end, { noremap = true, silent = true })
 
-------------------------------------------------------------------------------
-vim.keymap.set("v", "p", '"_dP', { desc = "paste from clipboard" })
-------------------------------------------------------------------------------
+vim.api.nvim_set_keymap("v", "<leader>x", "<Plug>SnipRun", { silent = true })
+vim.api.nvim_set_keymap("n", "<leader>x", "<Plug>SnipRunOperator", { silent = true })
 
-------------------------------------------------------------------------------
-vim.keymap.set("n", "<C-t>", ":lua require('user.functions').toggle_terminal()<CR>", { desc = "toggle terminal" })
-vim.keymap.set("t", "<C-t>", "<C-\\><C-n>:lua require('user.functions').toggle_terminal()<CR>",
-    { desc = "toggle terminal" })
-
-------------------------------------------------------------------------------
-vim.keymap.set("n", "<M-x>", function() -- toggle checkbox
-        -- knowledge.checkboxes.toggle_checkbox()
-    end,
-    { desc = "toggle checkbox" })
-
-------------------------------------------------------------------------------
-vim.keymap.set("n", "<D-x>", "<cmd>Run<CR>", { desc = "run code" })
-
-------------------------------------------------------------------------------
-vim.keymap.set("n", "<C-M-S-D-o>", ":lua vim.notify('hello')<CR>", { desc = "notify" })
-
--- <leader> then [s]
-------------------------------------------------------------------------------
--- vim.keymap.set('v', '<leader>gd', 'y<ESC>:Telescope live_grep default_text=<c-r>0<CR>', { noremap = false , silent = true})
-
-vim.keymap.set("n", "<leader>e", ":Config nvim<CR>", { desc = "edit nvim config", noremap = true})
-
--- <leader> then [r]
-------------------------------------------------------------------------------
-vim.keymap.set("n", "<leader>x", ":Run<CR>", { desc = "run code" , noremap = true})
-
-vim.keymap.set("n", "<leader>i", function()
-    -- run shell command
-    vim.cmd [[!hs -c 'print(apps.photoshop.alias)']]
-end, { noremap = false })
+-- swap ":Ex" with ":Oil" command
+vim.api.nvim_create_user_command("Ex", ":Oil", {})

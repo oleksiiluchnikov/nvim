@@ -1,0 +1,14 @@
+-- require('lsp-format').setup({
+--         lua = {
+--                 defaultConfig = {
+--                         indent_style = "space",
+--                         indent_size = "2",
+--                 },
+--                 tab_width = 1,
+--         },
+--         yaml = {
+--                 tabWidth = 2,
+--                 singleQuote = true,
+--         },
+--         rust = { tabWidth = 8 },
+-- })

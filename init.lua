@@ -1,1 +1,2 @@
-require 'user' -- source
+require('user')
+vim.cmd('colorscheme catppuccin')
