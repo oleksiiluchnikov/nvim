@@ -1,13 +1,11 @@
-local api = vim.api
-
 --- Create an autocommand group for setting filetypes
-local set_filetype_augroup = api.nvim_create_augroup("setFiletype", { clear = true })
+local set_filetype_augroup = vim.api.nvim_create_augroup("setFiletype", { clear = true })
 if not vim.lsp.handlers["textDocument/formatting"] then
     return
 end
 
 --- Set filetype to zsh for common zsh config files on buffer read
-api.nvim_create_autocmd("BufReadPost", {
+vim.api.nvim_create_autocmd("BufReadPost", {
     pattern = "*.zshrc,"
         .. "*.env,"
         .. "*.aliases,"
@@ -19,15 +17,15 @@ api.nvim_create_autocmd("BufReadPost", {
     command = "set filetype=zsh",
 })
 
-api.nvim_create_autocmd("BufReadPost", {
+--- Set filetype to 'javascript' for specific file patterns
+vim.api.nvim_create_autocmd("BufReadPost", {
     pattern = "*.psjs",
     group = set_filetype_augroup,
     command = "set filetype=javascript",
 })
 
 --- Set filetype to 'applescript' for specific file patterns and configure
---- indentation settings
-api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
     pattern = "*.applescript," .. "*.scpt," .. "*.scptd,",
     group = set_filetype_augroup,
     -- set tab size to 4 spaces
@@ -44,13 +42,6 @@ api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 -- )
 --
 
---
--- api.nvim_create_autocmd({ 'BufRead', 'BufNewFile' }, {
---   pattern = '*.psjs',
---   command = 'set filetype=javascript',
---   group = set_formatter_augroup,
--- })
---
 -- --- Set conditional indentation settings for specific file patterns on save
 -- api.nvim_create_autocmd('BufWritePre', {
 --   pattern = '*.applescript,' .. '*.scpt,' .. '*.scptd,',
@@ -99,7 +90,7 @@ api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 -- })
 
 -- au TextYankPost * silent! lua vim.highlight.on_yank {higroup="IncSearch", timeout=150}
-api.nvim_create_autocmd("TextYankPost", {
+vim.api.nvim_create_autocmd("TextYankPost", {
     pattern = "*",
     command = "silent! lua vim.highlight.on_yank {higroup=\"IncSearch\", timeout=50}",
 })
