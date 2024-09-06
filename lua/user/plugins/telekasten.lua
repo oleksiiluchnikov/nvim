@@ -1,9 +1,0 @@
--- local VAULT = vim.fn.expand('~/knowledge')
--- require('telekasten').setup({
---   home = vim.fn.expand('~/knowledge'),
---   daily = vim.fn.expand('~/knowledge/Journal/Daily'),
---   weekly = vim.fn.expand('~/knowledge/Journal/Weekly'),
---   templates = vim.fn.expand('~/knowledge/Resource/Template'),
---   -- image_subdir = vim.fn.expand("~/Knowledge"),
---   extension = '.md',
--- })

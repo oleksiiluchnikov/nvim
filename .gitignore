@@ -1,5 +1,4 @@
-#ignore lazy-lock.json
-#ignore .DS_Store
-#.to start ignore something start typing
 lazy-lock.json
 .DS_Store
+lua/
+prompts/
