@@ -652,6 +652,46 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require('lazy').setup({
+    -- {
+    --     -- [noice.nvim](https://github.com/folke/noice.nvim)
+    --     -- A no-nonsense Neovim statusline
+    --     -----------------------------------------------------------------------
+    --     'folke/noice.nvim',
+    --     event = 'VeryLazy',
+    --     opts = function(_, opts)
+    --         return {
+    --             cmdline = {
+    --                 enabled = true,
+    --                 view = 'cmdline',
+    --                 format = {},
+    --             },
+    --             lsp = {
+    --                 -- override markdown rendering so that **cmp** and other plugins use **Treesitter**
+    --                 override = {
+    --                     ['vim.lsp.util.convert_input_to_markdown_lines'] = true,
+    --                     ['vim.lsp.util.stylize_markdown'] = true,
+    --                     ['cmp.entry.get_documentation'] = true, -- requires hrsh7th/nvim-cmp
+    --                 },
+    --             },
+    --             -- you can enable a preset for easier configuration
+    --             presets = {
+    --                 bottom_search = true, -- use a classic bottom cmdline for search
+    --                 command_palette = true, -- position the cmdline and popupmenu together
+    --                 long_message_to_split = true, -- long messages will be sent to a split
+    --                 inc_rename = false, -- enables an input dialog for inc-rename.nvim
+    --                 lsp_doc_border = false, -- add a border to hover docs and signature help
+    --             },
+    --         }
+    --     end,
+    --     dependencies = {
+    --         -- if you lazy-load any plugin below, make sure to add proper `module="..."` entries
+    --         'MunifTanjim/nui.nvim',
+    --         -- OPTIONAL:
+    --         --   `nvim-notify` is only needed, if you want to use the notification view.
+    --         --   If not available, we use `mini` as the fallback
+    --         'rcarriga/nvim-notify',
+    --     },
+    -- },
     {
         -- [plenary.nvim](https://github.com/nvim-lua/plenary.nvim)
         -- Provides utility functions for Neovim Lua development
@@ -1417,13 +1457,16 @@ require('lazy').setup({
             },
         },
     },
-
-    -- Provides LuaSnip completion source for nvim-cmp
     {
+        -- [cmp_luasnip](https://github.com/saadparwaiz1/cmp_luasnip)
+        -- Provides LuaSnip completion source for nvim-cmp
+        -----------------------------------------------------------------------
         'saadparwaiz1/cmp_luasnip',
     },
-    -- Implements a minimal LSP client for Neovim
     {
+        -- [lsp-zero.nvim](https://github.com/VonHeikemen/lsp-zero.nvim)
+        -- Implements a minimal LSP client for Neovim
+        -----------------------------------------------------------------------
         'VonHeikemen/lsp-zero.nvim',
         config = function()
             local lspconfig = require('lspconfig')
@@ -1987,8 +2030,10 @@ require('lazy').setup({
         end,
         branch = 'v3.x',
     },
-    -- Offers a collection of LSP configurations
     {
+        -- [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig)
+        -- Provides a collection of configurations for the Nvim LSP client
+        -----------------------------------------------------------------------
         'neovim/nvim-lspconfig',
         lazy = true,
     },
@@ -1997,9 +2042,7 @@ require('lazy').setup({
         -- Provides inlay hints for LSP
         -----------------------------------------------------------------------
         'lvimuser/lsp-inlayhints.nvim',
-        opts = {},
-        lazy = true,
-        init = function()
+        config = function()
             vim.api.nvim_create_autocmd('LspAttach', {
                 group = vim.api.nvim_create_augroup('LspAttach_inlayhints', {}),
                 callback = function(args)
@@ -2043,23 +2086,29 @@ require('lazy').setup({
         },
     },
     {
+        -- [wezterm-types](https://github.com/justinsgithub/wezterm-types)
+        -- Adds LSP support for WezTerm lua types
+        -----------------------------------------------------------------------
         'justinsgithub/wezterm-types',
         ft = 'lua',
         lazy = true,
     },
     {
+        -- [luassert-types](https://github.com/LuaCATS/luassert)
+        -----------------------------------------------------------------------
         'LuaCATS/luassert',
         name = 'luassert-types',
         ft = 'lua',
         lazy = true,
     },
     {
+        -- [busted-types](https://github.com/LuaCATS/busted)
+        -----------------------------------------------------------------------
         'LuaCATS/busted',
         name = 'busted-types',
         ft = 'lua',
         lazy = true,
     },
-    -- LSP Plugins
     {
         -- [lazydev](https://github.com/folke/lazydev.nvim)
         -- `lazydev` configures Lua LSP for your Neovim config, runtime and plugins
@@ -2077,20 +2126,26 @@ require('lazy').setup({
         },
     },
     {
+        -- [luvit-meta](https://github.com/Bilal2453/luvit-meta)
+        -----------------------------------------------------------------------
         'Bilal2453/luvit-meta',
         lazy = true,
     },
     {
+        -- [mason-lspconfig.nvim](https://github.com/williamboman/mason-lspconfig.nvim)
+        -- Provides LSP configurations for Mason
+        -----------------------------------------------------------------------
         'williamboman/mason-lspconfig.nvim',
     },
-    -- Acts as an autocomplete framework for Neovim
     {
+        -- [nvim-cmp](https://github.com/hrsh7th/nvim-cmp)
+        -- Provides a completion engine for Neovim
+        -----------------------------------------------------------------------
         'hrsh7th/nvim-cmp',
-        event = 'InsertEnter',
-        config = function()
+        opts = function(_, opts)
             local cmp = require('cmp')
             ---@class cmp.ConfigSchema
-            local opts = {
+            opts = {
 
                 snippet = {
                     expand = function(args)
@@ -2116,6 +2171,7 @@ require('lazy').setup({
                         local menu_icon = {
                             cody = '[Cody]',
                             copilot = '[Copilot]',
+                            supermaven = '[Supermaven]',
                             nvim_lsp = '[LSP]',
                             nvim_lua = '[Lua]',
                             buffer = '[Buf]',
@@ -2177,6 +2233,7 @@ require('lazy').setup({
                     { name = 'path' },
                     { name = 'cody' },
                     { name = 'copilot' },
+                    { name = 'supermaven' },
                     { name = 'nvim_lsp' },
                     { name = 'nvim_lsp_signature_help' },
                     { name = 'nvim_lua' },
@@ -2222,6 +2279,7 @@ require('lazy').setup({
                 sources = cmp.config.sources({
                     { name = 'path' },
                     { name = 'copilot' },
+                    { name = 'cody' },
                 }, {
                     {
                         name = 'cmdline',
@@ -2236,24 +2294,32 @@ require('lazy').setup({
                 mapping = cmp.mapping.preset.cmdline(),
                 sources = {
                     { name = 'buffer' },
+                    { name = 'cody' },
+                    { name = 'copilot' },
                 },
             })
             cmp.setup.cmdline('?', {
                 mapping = cmp.mapping.preset.cmdline(),
                 sources = {
                     { name = 'buffer' },
+                    { name = 'cody' },
+                    { name = 'copilot' },
                 },
             })
             cmp.setup.cmdline('/', {
                 mapping = cmp.mapping.preset.cmdline(),
                 sources = {
                     { name = 'buffer' },
+                    { name = 'cody' },
+                    { name = 'copilot' },
                 },
             })
             cmp.setup.cmdline('!', {
                 mapping = cmp.mapping.preset.cmdline(),
                 sources = {
                     { name = 'buffer' },
+                    { name = 'cody' },
+                    { name = 'copilot' },
                 },
             })
         end,
@@ -3357,7 +3423,7 @@ require('lazy').setup({
                 pattern = '*',
                 callback = function()
                     -- vim.cmd('Format')
-                    vim.api.nvim_exec2('FormatWrite', {})
+                    pcall(vim.api.nvim_exec2, 'Format', {})
                 end,
                 group = augroup_formatter,
             })
@@ -6025,5 +6091,27 @@ function vim.u.format.lua.convert_function()
 
     convert_function(buf, lnum, line)
 end
+
+--- Force AI completions to be triggered in EX mode line in(C-f) they need to have filenname for buffer
+vim.api.nvim_create_autocmd({ 'CmdlineEnter' }, {
+    group = require('supermaven-nvim.document_listener').group,
+    callback = function()
+        local config = require('supermaven-nvim.config')
+        local buffer = vim.api.nvim_get_current_buf()
+        local file_name = vim.api.nvim_buf_get_name(buffer)
+        if not file_name or not buffer then
+            vim.notify('No file name or buffer found', vim.log.levels.ERROR)
+            return
+        end
+        if config.condition() then
+            -- binary:on_update(buffer, file_name, 'cmdline_enter')
+            require('supermaven-nvim.binary.binary_handler'):on_update(
+                buffer,
+                file_name,
+                'cmdline_enter'
+            )
+        end
+    end,
+})
 
 vim.cmd('colorscheme catppuccin')
