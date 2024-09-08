@@ -6,3 +6,11 @@ lua/test.lua
 lua/plugins/_*
 lua/test_*.lua
 prompts/
+lua/user/_styles/
+lua/user/knowledge/
+lua/user/plugins/_hs.lua
+lua/user/plugins/_kolo.lua
+lua/user/plugins/_markdown-url-paste.lua
+lua/user/plugins/_shellbot.lua
+lua/user/test.lua
+lua/user/test_2.lua
