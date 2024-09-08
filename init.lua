@@ -6,6 +6,7 @@ vim.g.netrw_banner = 0 -- Disable netrw banner
 vim.g.italic_comments = false -- Disable italic comments
 vim.g.netrw_list_hide = '.DS_Store' -- Ignore .DS_Store files in netrw
 vim.g.netrw_browse_split = 0 -- Open netrw in the current window
+
 vim.opt.scrolloff = 999 -- Set the scrolloff to 999
 vim.opt.splitright = true -- Split windows vertically to the right
 vim.opt.wrap = false -- Disable line wrapping
@@ -33,6 +34,7 @@ vim.opt.completeopt = { 'menuone', 'noselect', 'noinsert' } -- Set the complete 
 vim.opt.shortmess = vim.opt.shortmess + { c = true } -- Disable completion messages
 vim.opt.updatetime = 300 -- Set the update time
 vim.opt.shada = { '!', '\'1000', '<50', 's10', 'h' } -- Set the ShaDa options to save the history
+
 vim.env.NVIM_LSP_LOG_FILE = '/tmp/nvim.log'
 
 -- ========================================================================= --
@@ -697,7 +699,6 @@ require('lazy').setup({
         -- Provides utility functions for Neovim Lua development
         -----------------------------------------------------------------------
         'nvim-lua/plenary.nvim',
-        lazy = true,
     },
     {
         -- [edgy.nvim](https://github.com/folke/edgy.nvim)
@@ -2238,11 +2239,13 @@ require('lazy').setup({
                     { name = 'nvim_lsp_signature_help' },
                     { name = 'nvim_lua' },
                     { name = 'luasnip' },
-                    { name = 'buffer' },
+                    { name = 'buffer', group_index = 2 },
                     { name = 'lazydev', group_index = 0 },
                     { name = 'neorg' },
                     { name = 'vault_tag' },
                     { name = 'vault_date' },
+                    { name = 'vault_properties' },
+                    { name = 'vault_property_values' },
                 },
                 sorting = {
                     priority_weight = 2,
@@ -5262,12 +5265,12 @@ vim.api.nvim_create_user_command('PutMarkdownLink', put_markdown_link, {
 })
 
 -- Make a keybinding (mnemonic: "mark down paste")
-vim.keymap.set(
-    'n',
-    '<leader>pml',
-    put_markdown_link,
-    { silent = true, noremap = true }
-)
+-- vim.keymap.set(
+--     'n',
+--     '<leader>pml',
+--     put_markdown_link,
+--     { silent = true, noremap = true }
+-- )
 
 -- function commands.todo()
 --     local todoist_api_key = os.getenv('TODOIST_API_KEY')

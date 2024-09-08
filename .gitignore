@@ -1,4 +1,8 @@
 lazy-lock.json
 .DS_Store
-lua/
+lua/_styles/
+lua/knowledge/
+lua/test.lua
+lua/plugins/_*
+lua/test_*.lua
 prompts/
