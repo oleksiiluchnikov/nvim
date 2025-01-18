@@ -1,0 +1,36 @@
+return {
+    -- {
+    --     'milanglacier/minuet-ai.nvim',
+    --     -- config = function()
+    --     opts = {
+    --         -- Your configuration options here
+    --         virtualtext = {
+    --             -- auto_trigger_ft = {},
+    --             keymap = {
+    --                 accept = '<A-A>',
+    --                 accept_line = '<A-a>',
+    --                 -- Cycle to prev completion item, or manually invoke completion
+    --                 prev = '<A-[>',
+    --                 -- Cycle to next completion item, or manually invoke completion
+    --                 next = '<A-]>',
+    --                 dismiss = '<A-e>',
+    --             },
+    --         },
+    --         provider = 'openai_fim_compatible',
+    --         openai_fim_compatible = {
+    --             model = 'claude-3.5-sonnet-20240620',
+    --             -- end_point = 'https://api.deepseek.com/beta/completions',
+    --             end_point = 'https://openrouter.ai/api/v1',
+    --             name = 'claude-3-5-sonnet-20241022',
+    --             system = 'see [System Prompt] section for the default value',
+    --             few_shots = 'see [System Prompt] section for the default value',
+    --             api_key = 'OPENROUTER_API_KEY',
+    --             stream = true,
+    --             optional = {
+    --                 stop = '\n\n',
+    --                 max_tokens = 128,
+    --             },
+    --         },
+    --     },
+    -- },
+}
