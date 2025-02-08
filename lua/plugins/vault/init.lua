@@ -75,7 +75,9 @@ return {
                             string.format(
                                 'open \'obsidian://open?vault=%s&file=%s\'',
                                 require('config.utils').uri.encode(vault_name),
-                                require('config.utils').uri.encode(note.data.stem)
+                                require('config.utils').uri.encode(
+                                    note.data.stem
+                                )
                             )
                         )
                     end

@@ -183,6 +183,7 @@ return {
                 opts.ensure_installed = opts.ensure_installed
             end
             require('nvim-treesitter.configs').setup(opts)
+            vim.treesitter.language.register('javascript', 'dataviewjs')
         end,
     },
 }

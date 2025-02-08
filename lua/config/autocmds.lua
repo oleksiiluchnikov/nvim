@@ -27,19 +27,6 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     command = 'silent! lua vim.highlight.on_yank({higroup="IncSearch", timeout=25})',
 })
 
-local osascript_cmd_fmt = 'osascript -e "set the clipboard to %q"'
-local osascript_cmd = string.format(osascript_cmd_fmt, '')
-
-vim.api.nvim_create_autocmd('TextYankPost', {
-    pattern = '*',
-    group = autocmd_group,
-    callback = function()
-        local yanked_text = vim.fn.getreg('"')
-        osascript_cmd = string.format(osascript_cmd_fmt, yanked_text)
-        vim.cmd('!' .. osascript_cmd)
-    end,
-})
-
 --- Sets the filetype for various file extensions
 local function set_filetypes()
     -- Precompute file patterns for better performance

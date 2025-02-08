@@ -2,36 +2,198 @@ return {
     -- add blink.compat
     {
         'saghen/blink.compat',
-        -- use the latest release, via version = '*', if you also use the latest release for blink.cmp
         version = '*',
-        -- lazy.nvim will automatically load the plugin when it's required by blink.cmp
         lazy = true,
-        -- make sure to set opts so that lazy.nvim calls blink.compat's setup
         opts = {},
     },
     {
         'giuxtaposition/blink-cmp-copilot',
     },
-
     {
         'saghen/blink.cmp',
-        -- optional: provides snippets for the snippet source
         dependencies = 'rafamadriz/friendly-snippets',
-
-        -- use a release tag to download pre-built binaries
         version = '*',
-        -- AND/OR build from source, requires nightly: https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust
-        -- build = 'cargo build --release',
-        -- If you use nix, you can build from source using latest nightly rust with:
-        -- build = 'nix run .#build-plugin',
-
-        ---@module 'blink.cmp'
-        ---@type blink.cmp.Config
         opts = {
-            -- 'default' for mappings similar to built-in completion
-            -- 'super-tab' for mappings similar to vscode (tab to accept, arrow keys to navigate)
-            -- 'enter' for mappings similar to 'super-tab' but with 'enter' to accept
-            -- See the full "keymap" documentation for information on defining your own keymap.
+            completion = {
+                keyword = {
+                    range = 'full',
+                },
+                list = {
+                    max_items = 99999,
+                    selection = {
+                        preselect = true,
+                        auto_insert = false,
+                    },
+                },
+                menu = {
+                    enabled = true,
+                    min_width = 15,
+                    max_height = vim.o.lines - 5,
+                    border = 'none',
+                    winblend = 0,
+                    winhighlight = 'Normal:BlinkCmpMenu,FloatBorder:BlinkCmpMenuBorder,CursorLine:BlinkCmpMenuSelection,Search:None',
+                    -- Keep the cursor X lines away from the top/bottom of the window
+                    scrolloff = 2,
+                    -- Note that the gutter will be disabled when border ~= 'none'
+                    scrollbar = true,
+                    -- Which directions to show the window,
+                    -- falling back to the next direction when there's not enough space
+                    direction_priority = { 's', 'n' },
+
+                    -- Whether to automatically show the window when new completion items are available
+                    auto_show = true,
+
+                    -- Screen coordinates of the command line
+                    cmdline_position = function()
+                        if vim.g.ui_cmdline_pos ~= nil then
+                            local pos = vim.g.ui_cmdline_pos -- (1, 0)-indexed
+                            return { pos[1] - 1, pos[2] }
+                        end
+                        local height = (vim.o.cmdheight == 0) and 1
+                            or vim.o.cmdheight
+                        return { vim.o.lines - height, 0 }
+                    end,
+                    draw = {
+                        -- Aligns the keyword you've typed to a component in the menu
+                        align_to = 'cursor', -- or 'none' to disable, or 'cursor' to align to the cursor
+                        -- Left and right padding, optionally { left, right } for different padding on each side
+                        padding = 0,
+                        -- Gap between columns
+                        gap = 1,
+                        -- Use treesitter to highlight the label text for the given list of sources
+                        treesitter = { 'lsp' },
+                        -- treesitter = { 'lsp' }
+
+                        -- Components to render, grouped by column
+                        columns = {
+                            { 'label', 'label_description', gap = 1 },
+                            { 'kind_icon', 'kind' },
+                            { 'source_name' },
+                        },
+                        -- Definitions for possible components to render. Each defines:
+                        --   ellipsis: whether to add an ellipsis when truncating the text
+                        --   width: control the min, max and fill behavior of the component
+                        --   text function: will be called for each item
+                        --   highlight function: will be called only when the line appears on screen
+                        components = {
+                            kind_icon = {
+                                ellipsis = false,
+                                text = function(ctx)
+                                    return ctx.kind_icon .. ctx.icon_gap
+                                end,
+                                highlight = function(ctx)
+                                    return require(
+                                        'blink.cmp.completion.windows.render.tailwind'
+                                    ).get_hl(
+                                        ctx
+                                    ) or 'BlinkCmpKind' .. ctx.kind
+                                end,
+                            },
+
+                            kind = {
+                                ellipsis = false,
+                                width = { fill = true },
+                                text = function(ctx)
+                                    return ctx.kind
+                                end,
+                                highlight = function(ctx)
+                                    return require(
+                                        'blink.cmp.completion.windows.render.tailwind'
+                                    ).get_hl(
+                                        ctx
+                                    ) or 'BlinkCmpKind' .. ctx.kind
+                                end,
+                            },
+
+                            label = {
+                                width = {
+                                    fill = true,
+                                    max = vim.o.columns * 0.75,
+                                },
+                                text = function(ctx)
+                                    return ctx.label .. ctx.label_detail
+                                end,
+                                highlight = function(ctx)
+                                    -- label and label details
+                                    local highlights = {
+                                        {
+                                            0,
+                                            #ctx.label,
+                                            group = ctx.deprecated
+                                                    and 'BlinkCmpLabelDeprecated'
+                                                or 'BlinkCmpLabel',
+                                        },
+                                    }
+                                    if ctx.label_detail then
+                                        table.insert(highlights, {
+                                            #ctx.label,
+                                            #ctx.label + #ctx.label_detail,
+                                            group = 'BlinkCmpLabelDetail',
+                                        })
+                                    end
+
+                                    -- characters matched on the label by the fuzzy matcher
+                                    for _, idx in
+                                        ipairs(ctx.label_matched_indices)
+                                    do
+                                        table.insert(highlights, {
+                                            idx,
+                                            idx + 1,
+                                            group = 'BlinkCmpLabelMatch',
+                                        })
+                                    end
+
+                                    return highlights
+                                end,
+                            },
+
+                            label_description = {
+                                width = { max = vim.o.columns * 0.75 },
+                                text = function(ctx)
+                                    return ctx.label_description
+                                end,
+                                highlight = 'BlinkCmpLabelDescription',
+                            },
+
+                            source_name = {
+                                width = { max = vim.o.columns * 0.75 },
+                                text = function(ctx)
+                                    return ctx.source_name
+                                end,
+                                highlight = 'BlinkCmpSource',
+                            },
+                        },
+                    },
+                },
+                documentation = {
+                    -- Controls whether the documentation window will automatically show when selecting a completion item
+                    auto_show = true,
+                    -- Delay before showing the documentation window
+                    auto_show_delay_ms = 1,
+                    -- Delay before updating the documentation window when selecting a new item,
+                    -- while an existing item is still visible
+                    update_delay_ms = 1,
+                    -- Whether to use treesitter highlighting, disable if you run into performance issues
+                    treesitter_highlighting = true,
+                    window = {
+                        min_width = 10,
+                        max_width = vim.o.columns * 0.75,
+                        max_height = vim.o.lines * 0.6,
+                        border = 'padded',
+                        winblend = 0,
+                        winhighlight = 'Normal:BlinkCmpDoc,FloatBorder:BlinkCmpDocBorder,EndOfBuffer:BlinkCmpDoc',
+                        -- Note that the gutter will be disabled when border ~= 'none'
+                        scrollbar = true,
+                        -- Which directions to show the documentation window,
+                        -- for each of the possible menu window directions,
+                        -- falling back to the next direction when there's not enough space
+                        direction_priority = {
+                            menu_north = { 'e', 'w', 'n', 's' },
+                            menu_south = { 'e', 'w', 's', 'n' },
+                        },
+                    },
+                },
+            },
             keymap = {
                 preset = 'default',
                 ['<C-y>'] = {
@@ -61,24 +223,8 @@ return {
                             return col == 0
                                 or vim.fn.getline('.'):sub(col, col):match('%s')
                         end
-                        -- local copilot_suggestion = require('copilot.suggestion')
+
                         local cmp = require('blink.cmp')
-                        -- local luasnip = require('luasnip')
-                        -- local has_avante, avante_api = pcall(require, 'avante.api')
-                        -- -- local supermaven_suggestion =
-                        -- --     require('supermaven-nvim.completion_preview')
-                        -- -- if supermaven_suggestion.has_suggestion() then
-                        -- --     supermaven_suggestion.on_accept_suggestion_word()
-                        -- if copilot_suggestion.is_visible() then
-                        --     copilot_suggestion.accept_word()
-                        -- elseif cmp.visible() then
-                        --     cmp.mapping.confirm({
-                        --         behavior = cmp.ConfirmBehavior.Replace,
-                        --         select = select,
-                        --     })()
-                        -- else
-                        --     return
-                        -- end
                         local copilot_accept = vim.fn['copilot#Accept']
                         local copilot_keys = ''
                         if copilot_accept then
@@ -97,7 +243,7 @@ return {
                             pcall(require, 'supermaven-nvim.completion_preview')
                         local has_copilot_lua, copilot_lua_suggestion =
                             pcall(require, 'copilot.suggestion')
-                        -- if options.tab_complete_copilot_first then
+
                         if copilot_keys ~= '' then
                             vim.api.nvim_feedkeys(copilot_keys, 'i', true)
                         elseif
@@ -115,80 +261,42 @@ return {
                         then
                             copilot_lua_suggestion.accept_line()
                         elseif cmp.is_visible() then
-                            -- cmp.select_next_item()
-                            -- cmp.mapping.confirm({
-                            --     behavior = cmp.ConfirmBehavior.Replace,
-                            --     select = select,
-                            -- })()
                             cmp.accept()
-                        -- elseif luasnip.expand_or_jumpable() then
-                        --     vim.fn.feedkeys(
-                        --         replace_termcodes(
-                        --             '<Plug>luasnip-expand-or-jump'
-                        --         ),
-                        --         ''
-                        --     )
                         elseif check_backspace() then
                             vim.fn.feedkeys(replace_termcodes('<Tab>'), 'n')
                         else
                             return true
                         end
-                        -- else
-                        --     if cmp.visible() then
-                        --         cmp.select_next_item()
-                        --     elseif copilot_keys ~= '' then
-                        --         vim.api.nvim_feedkeys(copilot_keys, 'i', true)
-                        --     elseif luasnip.expand_or_jumpable() then
-                        --         vim.fn.feedkeys(
-                        --             replace_termcodes(
-                        --                 '<Plug>luasnip-expand-or-jump'
-                        --             ),
-                        --             ''
-                        --         )
-                        --     elseif check_backspace() then
-                        --         vim.fn.feedkeys(replace_termcodes('<Tab>'), 'n')
-                        --     else
-                        --         return
-                        --     end
-                        -- end
                     end,
-                    -- 'accept',
                 },
-                ['C-l'] = {
+                ['<C-l>'] = {
                     function(fallback)
-                        -- accept line
                         local cmp = require('blink.cmp')
                         local copiolt_suggestion = require('copilot.suggestion')
                         if copiolt_suggestion.is_visible() then
                             copiolt_suggestion.accept_line()
-                            -- elseif cmp.is_visible() then
-                            --     cmp.accept()
-                            -- else
-                            --     return true
                             return
                         end
                     end,
                     'accept',
                 },
                 ['<C-j>'] = {
-                    function(fallback) -- accept all
+                    function(fallback)
                         local cmp = require('blink.cmp')
                         local copiolt_suggestion = require('copilot.suggestion')
                         if copiolt_suggestion.is_visible() then
                             copiolt_suggestion.accept()
-                            -- elseif cmp.is_visible() then
-                            --     cmp.accept()
-                            -- else
-                            --     return true
                             return
                         end
                     end,
                     'accept',
                 },
                 ['up'] = {
-                    function(fallback) -- accept all
+                    function(fallback)
                         local cmp = require('blink.cmp')
-                        if cmp.is_visible() then
+                        if vim.fn.mode() == 'c' then
+                            fallback()
+                        elseif cmp.is_visible() then
                             cmp.select_prev()
                         else
                             require('config.utils').jump_to_next_line_with_same_indent(
@@ -200,10 +308,11 @@ return {
                     end,
                 },
                 ['down'] = {
-                    function(fallback) -- accept all
+                    function(fallback)
                         local cmp = require('blink.cmp')
-
-                        if cmp.is_visible() then
+                        if vim.fn.mode() == 'c' then
+                            fallback()
+                        elseif cmp.is_visible() then
                             cmp.select_next()
                         else
                             require('config.utils').jump_to_next_line_with_same_indent(
@@ -214,214 +323,63 @@ return {
                         end
                     end,
                 },
-                completion = {
-                    -- Maximum number of items to display
-                    max_items = 200,
-                    menu = {
-                        enabled = true,
-                        min_width = 60,
-                        max_height = 200,
-                        border = 'rounded',
-                        auto_show = true,
-
-                        draw = {
-                            align_to = 'cursor',
-                            columns = {
-                                { 'label', 'label_description', gap = 1 },
-                                { 'kind_icon', 'kind' },
-                            },
-                            treesitter = true,
-                            -- components = {
-                            --     kind_icon = {
-                            --         ellipsis = false,
-                            --         text = function(ctx)
-                            --             return ctx.kind_icon .. ctx.icon_gap
-                            --         end,
-                            --         highlight = function(ctx)
-                            --             return require(
-                            --                 'blink.cmp.completion.windows.render.tailwind'
-                            --             ).get_hl(
-                            --                 ctx
-                            --             ) or 'BlinkCmpKind' .. ctx.kind
-                            --         end,
-                            --     },
-                            --
-                            --     kind = {
-                            --         ellipsis = false,
-                            --         width = { fill = true },
-                            --         text = function(ctx)
-                            --             return ctx.kind
-                            --         end,
-                            --         highlight = function(ctx)
-                            --             return require(
-                            --                 'blink.cmp.completion.windows.render.tailwind'
-                            --             ).get_hl(
-                            --                 ctx
-                            --             ) or 'BlinkCmpKind' .. ctx.kind
-                            --         end,
-                            --     },
-                            --
-                            --     label = {
-                            --         width = { fill = true, max = 60 },
-                            --         text = function(ctx)
-                            --             return ctx.label .. ctx.label_detail
-                            --         end,
-                            --         highlight = function(ctx)
-                            --             -- label and label details
-                            --             local highlights = {
-                            --                 {
-                            --                     0,
-                            --                     #ctx.label,
-                            --                     group = ctx.deprecated
-                            --                             and 'BlinkCmpLabelDeprecated'
-                            --                         or 'BlinkCmpLabel',
-                            --                 },
-                            --             }
-                            --             if ctx.label_detail then
-                            --                 table.insert(highlights, {
-                            --                     #ctx.label,
-                            --                     #ctx.label + #ctx.label_detail,
-                            --                     group = 'BlinkCmpLabelDetail',
-                            --                 })
-                            --             end
-                            --
-                            --             -- characters matched on the label by the fuzzy matcher
-                            --             for _, idx in
-                            --                 ipairs(ctx.label_matched_indices)
-                            --             do
-                            --                 table.insert(highlights, {
-                            --                     idx,
-                            --                     idx + 1,
-                            --                     group = 'BlinkCmpLabelMatch',
-                            --                 })
-                            --             end
-                            --
-                            --             return highlights
-                            --         end,
-                            --     },
-                            --
-                            --     label_description = {
-                            --         width = { max = 30 },
-                            --         text = function(ctx)
-                            --             return ctx.label_description
-                            --         end,
-                            --         highlight = 'BlinkCmpLabelDescription',
-                            --     },
-                            --
-                            --     source_name = {
-                            --         width = { max = 30 },
-                            --         text = function(ctx)
-                            --             return ctx.source_name
-                            --         end,
-                            --         highlight = 'BlinkCmpSource',
-                            --     },
-                            -- },
-                        },
-                    },
-                    -- Show documentation when selecting a completion item
-                    documentation = { auto_show = true, auto_show_delay_ms = 5 },
-
-                    -- Display a preview of the selected item on the current line
-                    ghost_text = { enabled = false },
+                documentation = { auto_show = true, auto_show_delay_ms = 0 },
+                ghost_text = { enabled = false },
+            },
+            appearance = {
+                use_nvim_cmp_as_default = true,
+                nerd_font_variant = 'mono',
+            },
+            sources = {
+                default = {
+                    'path',
+                    'cody',
+                    'copilot',
+                    'vault_tag',
+                    'vault_date',
+                    'vault_properties',
+                    'vault_property_values',
+                    'lazydev',
+                    'lsp',
+                    'snippets',
+                    'buffer',
                 },
-
-                appearance = {
-                    -- Sets the fallback highlight groups to nvim-cmp's highlight groups
-                    -- Useful for when your theme doesn't support blink.cmp
-                    -- Will be removed in a future release
-                    use_nvim_cmp_as_default = true,
-                    -- nvim-cmp style menu
-                    -- Set to 'mono' for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
-                    -- Adjusts spacing to ensure icons are aligned
-                    nerd_font_variant = 'mono',
-                },
-
-                -- Default list of enabled providers defined so that you can extend it
-                -- elsewhere in your config, without redefining it, due to `opts_extend`
-                sources = {
-                    default = {
-                        'path',
-                        'cody',
-                        'copilot',
-                        'vault_tag',
-                        'vault_date',
-                        'vault_properties',
-                        'vault_property_values',
-                        'lazydev',
-                        'lsp',
-                        'snippets',
-                        'buffer',
+                providers = {
+                    lazydev = {
+                        name = 'LazyDev',
+                        module = 'lazydev.integrations.blink',
+                        score_offset = 100,
                     },
-                    providers = {
-                        -- create provider
-                        -- digraphs = {
-                        --     name = 'digraphs', -- IMPORTANT: use the same name as you would for nvim-cmp
-                        --     module = 'blink.compat.source',
-                        --
-                        --     -- all blink.cmp source config options work as normal:
-                        --     score_offset = -3,
-                        --
-                        --     -- this table is passed directly to the proxied completion source
-                        --     -- as the `option` field in nvim-cmp's source config
-                        --     --
-                        --     -- this is NOT the same as the opts in a plugin's lazy.nvim spec
-                        --     opts = {
-                        --         -- this is an option from cmp-digraphs
-                        --         cache_digraphs_on_start = true,
-                        --     },
-                        -- },
-                        lazydev = {
-                            name = 'LazyDev',
-                            module = 'lazydev.integrations.blink',
-                            -- make lazydev completions top priority (see `:h blink.cmp`)
-                            score_offset = 100,
-                        },
-                        copilot = {
-                            name = 'copilot',
-                            module = 'blink-cmp-copilot',
-                            score_offset = 100,
-                            async = true,
-                        },
-                        cody = {
-                            name = 'cody',
-                            module = 'blink.compat.source',
-                            opts = {
-                                -- this is an option from cmp-cody
-                                -- tab_complete_cody_first = true,
-                            },
-                        },
-                        vault_tag = {
-                            name = 'vault_tag',
-                            module = 'blink.compat.source',
-                            opts = {
-                                -- this is an option from cmp-vault
-                                -- tab_complete_vault_tag_first = true,
-                            },
-                        },
-                        vault_date = {
-                            name = 'vault_date',
-                            module = 'blink.compat.source',
-                            opts = {
-                                -- this is an option from cmp-vault
-                                -- tab_complete_vault_date_first = true,
-                            },
-                        },
-                        vault_properties = {
-                            name = 'vault_properties',
-                            module = 'blink.compat.source',
-                            opts = {
-                                -- this is an option from cmp-vault
-                                -- tab_complete_vault_properties_first = true, he
-                            },
-                        },
-                        vault_property_values = {
-                            name = 'vault_property_values',
-                            module = 'blink.compat.source',
-                            opts = {
-                                -- this is an option from cmp-vault
-                                -- tab_complete_vault_property_values_first = true,
-                            },
-                        },
+                    copilot = {
+                        name = 'copilot',
+                        module = 'blink-cmp-copilot',
+                        score_offset = 100,
+                        async = true,
+                    },
+                    cody = {
+                        name = 'cody',
+                        module = 'blink.compat.source',
+                        opts = {},
+                    },
+                    vault_tag = {
+                        name = 'vault_tag',
+                        module = 'blink.compat.source',
+                        opts = {},
+                    },
+                    vault_date = {
+                        name = 'vault_date',
+                        module = 'blink.compat.source',
+                        opts = {},
+                    },
+                    vault_properties = {
+                        name = 'vault_properties',
+                        module = 'blink.compat.source',
+                        opts = {},
+                    },
+                    vault_property_values = {
+                        name = 'vault_property_values',
+                        module = 'blink.compat.source',
+                        opts = {},
                     },
                 },
             },

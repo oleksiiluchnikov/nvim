@@ -152,6 +152,7 @@ return {
                 'harpoon',
                 'nerdy',
                 'configs',
+                'avante',
             }
 
             for _, ext in ipairs(extensions) do

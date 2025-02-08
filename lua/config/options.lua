@@ -49,4 +49,3 @@ vim.opt.laststatus = 3
 
 -- Logging
 vim.env.NVIM_LSP_LOG_FILE = '/tmp/nvim.log'
-vim.notify('Options loaded')

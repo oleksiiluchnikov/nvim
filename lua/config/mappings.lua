@@ -21,3 +21,9 @@ vim.keymap.set('n', '<left>', '<C-w>h', { desc = 'focus left window' })
 vim.keymap.set('n', '<right>', '<C-w>l', { desc = 'focus right window' })
 vim.keymap.set('v', 'J', ':m \'>+1<CR>gv=gv', { desc = 'move line up' })
 vim.keymap.set('v', 'K', ':m \'>-2<CR>gv=gv', { desc = 'move line down' })
+vim.keymap.set(
+    'n',
+    '<C-p>',
+    ':Telescope<CR>',
+    { desc = 'open telescope', noremap = true }
+)

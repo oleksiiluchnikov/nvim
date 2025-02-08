@@ -13,6 +13,7 @@ return {
             mason.setup()
             local lspconfig_mason = require('mason-lspconfig')
             lspconfig_mason.setup()
+            local capabilities = require('blink.cmp').get_lsp_capabilities()
 
             -- local available_servers = require('mason-lspconfig').get_available_servers()
             -- for _, server in ipairs(available_servers) do
@@ -429,6 +430,7 @@ return {
                 handlers = {
                     ['textDocument/publishDiagnostics'] = filter_spoon_diagnostics,
                 },
+                capabilities = capabilities,
             }
             lspconfig.lua_ls.setup(lua_ls)
 
@@ -695,6 +697,7 @@ return {
                 handlers = {
                     ['textDocument/publishDiagnostics'] = filter_trash_notes,
                 },
+                capabilities = capabilities,
             })
 
             -- C
@@ -704,6 +707,7 @@ return {
                 handlers = {
                     ['textDocument/publishDiagnostics'] = filter_trash_notes,
                 },
+                capabilities = capabilities,
             })
 
             --
